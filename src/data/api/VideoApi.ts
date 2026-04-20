@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { Video, VideoClip } from '../../domain/entities/Video';
 import { ApiConfig } from '../../core/constants/api';
+import { useAuthStore } from '../../presentation/hooks/useAuthStore';
 
 export const VideoApi = {
   upload: async (fileUri: string, onProgress?: (progress: number) => void): Promise<Video> => {
     if (ApiConfig.USE_MOCK) {
-      // Simulate upload progress
       for (let i = 0; i <= 100; i += 10) {
         if (onProgress) onProgress(i);
         await new Promise(resolve => setTimeout(() => resolve(true), 200));
@@ -19,6 +19,7 @@ export const VideoApi = {
       };
     }
 
+    const token = useAuthStore.getState().token;
     const formData = new FormData();
     formData.append('video', {
       uri: fileUri,
@@ -26,9 +27,11 @@ export const VideoApi = {
       type: 'video/mp4',
     } as any);
 
+    console.log('Calling URL:', `${ApiConfig.BASE_URL}/videos/upload`);
     const response = await axios.post(`${ApiConfig.BASE_URL}/videos/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
@@ -51,44 +54,26 @@ export const VideoApi = {
         status: 'completed',
       };
     }
-    const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/status`);
+    const token = useAuthStore.getState().token;
+    const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/status`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
     return response.data;
   },
 
   getClips: async (videoId: string): Promise<VideoClip[]> => {
     if (ApiConfig.USE_MOCK) {
       await new Promise(resolve => setTimeout(() => resolve(true), 1500));
-      return [
-        {
-          id: 'clip_1',
-          parentVideoId: videoId,
-          url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
-          thumbnail: 'https://picsum.photos/id/1/400/300',
-          duration: 15,
-          title: 'Epic Moment 1',
-          status: 'completed',
-          subtitles: [
-            { startTime: 0, endTime: 5, text: "Look at this amazing scenery!" },
-            { startTime: 5, endTime: 10, text: "Nature is truly beautiful." },
-            { startTime: 10, endTime: 15, text: "Don't forget to follow!" },
-          ]
-        },
-        {
-          id: 'clip_2',
-          parentVideoId: videoId,
-          url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
-          thumbnail: 'https://picsum.photos/id/10/400/300',
-          duration: 12,
-          title: 'The Big Jump',
-          status: 'completed',
-          subtitles: [
-            { startTime: 0, endTime: 6, text: "Wait for it..." },
-            { startTime: 6, endTime: 12, text: "BOOM! Incredible!" },
-          ]
-        }
-      ];
+      return [];
     }
-    const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/clips`);
+    const token = useAuthStore.getState().token;
+    const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/clips`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    });
     return response.data;
   },
 };
