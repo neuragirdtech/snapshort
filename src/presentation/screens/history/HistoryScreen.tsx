@@ -145,7 +145,7 @@ const HistoryScreen = () => {
       )}
 
       {/* Action Menu Modal */}
-      <Modal transparent visible={menuVisible} animationType="fade">
+      <Modal transparent visible={menuVisible} animationType="slide">
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
@@ -158,8 +158,7 @@ const HistoryScreen = () => {
             <TouchableOpacity style={styles.actionItem} onPress={() => {
               setMenuVisible(false);
               navigation.navigate('VideoPlayer', {
-                videoUrl: selectedVideo!.url,
-                title: selectedVideo!.title
+                videoId: selectedVideo!.id
               });
             }}>
               <View style={[styles.actionIcon, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>

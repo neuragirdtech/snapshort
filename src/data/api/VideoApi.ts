@@ -83,4 +83,12 @@ export const VideoApi = {
     });
     return response.data;
   },
+  
+  getVideoDetail: async (videoId: string): Promise<Video & { clips: any[] }> => {
+    const token = useAuthStore.getState().token;
+    const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.data;
+  },
 };

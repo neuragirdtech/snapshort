@@ -16,7 +16,7 @@ export type RootStackParamList = {
   Register: undefined;
   Main: undefined; 
   Result: { videoId: string };
-  VideoPlayer: { videoUrl: string, title: string }; // Parameter baru
+  VideoPlayer: { videoUri?: string, title?: string, videoId?: string }; // videoId ditambahkan untuk fetch BE
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
