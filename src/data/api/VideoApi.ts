@@ -19,7 +19,7 @@ export const VideoApi = {
       };
     }
 
-    const token = useAuthStore.getState().token;
+    const { token, activeProvider, apiToken } = useAuthStore.getState();
     const formData = new FormData();
     formData.append('video', {
       uri: fileUri,
@@ -27,12 +27,18 @@ export const VideoApi = {
       type: 'video/mp4',
     } as any);
 
-    console.log('Calling URL:', `${ApiConfig.BASE_URL}/videos/upload`);
+    const headers: any = {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`,
+      'x-ai-provider': activeProvider, // 'gemini' | 'openai' | 'claude'
+    };
+
+    if (apiToken) {
+      headers['x-api-key'] = apiToken;
+    }
+
     const response = await axios.post(`${ApiConfig.BASE_URL}/videos/upload`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`,
-      },
+      headers,
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
           const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -45,34 +51,35 @@ export const VideoApi = {
   },
 
   getStatus: async (videoId: string): Promise<Video> => {
-    if (ApiConfig.USE_MOCK) {
-      return {
-        id: videoId,
-        url: '',
-        title: 'Sample Video',
-        duration: 60,
-        status: 'completed',
-      };
-    }
+    if (ApiConfig.USE_MOCK) return { id: videoId, url: '', title: 'Sample Video', duration: 60, status: 'completed' };
     const token = useAuthStore.getState().token;
     const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/status`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     return response.data;
   },
 
   getClips: async (videoId: string): Promise<VideoClip[]> => {
-    if (ApiConfig.USE_MOCK) {
-      await new Promise(resolve => setTimeout(() => resolve(true), 1500));
-      return [];
-    }
+    if (ApiConfig.USE_MOCK) return [];
     const token = useAuthStore.getState().token;
     const response = await axios.get(`${ApiConfig.BASE_URL}/videos/${videoId}/clips`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      }
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  getMyVideos: async (): Promise<Video[]> => {
+    const token = useAuthStore.getState().token;
+    const response = await axios.get(`${ApiConfig.BASE_URL}/videos`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  updateTitle: async (videoId: string, title: string): Promise<any> => {
+    const token = useAuthStore.getState().token;
+    const response = await axios.post(`${ApiConfig.BASE_URL}/videos/${videoId}/update-title`, { title }, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     return response.data;
   },

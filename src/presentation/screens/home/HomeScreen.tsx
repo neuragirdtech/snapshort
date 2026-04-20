@@ -11,9 +11,8 @@ import { Colors, Spacing, Typography } from '../../../core/constants/theme';
 import { useVideoStore } from '../../hooks/useVideoStore';
 import { UploadVideoUseCase } from '../../../domain/usecases/UploadVideoUseCase';
 import { VideoRepositoryImpl } from '../../../data/repositories/VideoRepositoryImpl';
-import { useAuthStore } from '../../hooks/useAuthStore';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -36,8 +35,20 @@ const HomeScreen: React.FC = () => {
       return;
     }
 
-    const videoUri = result.assets[0].uri;
+    const asset = result.assets[0];
+    const videoUri = asset.uri;
+    const duration = asset.duration; // Dalam detik
+
     if (!videoUri) return;
+
+    // Cek durasi (maksimal 10 menit / 600 detik)
+    if (duration && duration > 600) {
+      Alert.alert(
+        'Video Too Long',
+        'Maximum video duration is 10 minutes. Please pick a shorter video.'
+      );
+      return;
+    }
 
     try {
       setProcessing(true);
@@ -53,6 +64,7 @@ const HomeScreen: React.FC = () => {
       setCurrentVideo(video);
       navigation.navigate('Result', { videoId: video.id });
     } catch (err) {
+      console.error(err);
       setError('Failed to upload video. Please try again.');
       Alert.alert('Error', 'Failed to upload video');
     } finally {
@@ -63,21 +75,16 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header Area */}
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View>
-            <Text style={Typography.h1}>Long Video to</Text>
-            <Text style={[Typography.h1, { color: Colors.primary }]}>Short Clips</Text>
-          </View>
-          <TouchableOpacity onPress={() => useAuthStore.getState().logout()} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={Typography.h1}>Long Video to</Text>
+        <Text style={[Typography.h1, { color: Colors.primary }]}>Short Clips</Text>
         <Text style={[Typography.body, styles.subtitle]}>
-          Automatically cut your videos, add subtitles, and get them ready for TikTok, Reels, and Shorts.
+          Automatically cut your videos for TikTok, Reels, and Shorts using AI.
         </Text>
       </View>
 
+      {/* Main Content (Centered) */}
       <View style={styles.content}>
         {isProcessing ? (
           <View style={styles.processingContainer}>
@@ -103,13 +110,14 @@ const HomeScreen: React.FC = () => {
         )}
       </View>
 
+      {/* Footer Features */}
       <View style={styles.footer}>
         <View style={styles.featureItem}>
-          <PlayCircle color={Colors.primary} size={24} />
+          <PlayCircle color={Colors.primary} size={20} />
           <Text style={styles.featureText}>Auto Captions</Text>
         </View>
         <View style={styles.featureItem}>
-          <PlayCircle color={Colors.primary} size={24} />
+          <PlayCircle color={Colors.primary} size={20} />
           <Text style={styles.featureText}>Smart Framing</Text>
         </View>
       </View>
@@ -121,32 +129,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
   },
   header: {
     marginTop: Spacing.xl,
-    marginBottom: Spacing.xl * 2,
+    alignItems: 'center',
+    textAlign: 'center',
   },
   subtitle: {
-    marginTop: Spacing.md,
-    lineHeight: 22,
-    opacity: 0.8,
+    marginTop: Spacing.sm,
+    lineHeight: 20,
+    opacity: 0.7,
+    textAlign: 'center',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
+    transform: [{ translateY: -30 }], // Menggeser kartu ke atas sedikit
   },
   uploadCard: {
-    height: 240,
-    borderRadius: 24,
+    height: 260,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 10,
   },
   uploadTitle: {
     ...Typography.h2,
@@ -159,9 +170,9 @@ const styles = StyleSheet.create({
   },
   processingContainer: {
     alignItems: 'center',
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     backgroundColor: Colors.surface,
-    borderRadius: 24,
+    borderRadius: 32,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -175,7 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     borderRadius: 3,
     width: '100%',
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -185,29 +196,17 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: Spacing.xl,
+    paddingBottom: Spacing.xl,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   featureText: {
-    ...Typography.body,
+    ...Typography.caption,
     marginLeft: Spacing.sm,
     fontWeight: '500',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  logoutBtn: {
-    padding: Spacing.sm,
-  },
-  logoutText: {
-    ...Typography.caption,
-    color: Colors.error,
-    fontWeight: 'bold',
+    color: '#94A3B8',
   },
 });
 
