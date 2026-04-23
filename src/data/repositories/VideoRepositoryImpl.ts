@@ -3,9 +3,13 @@ import { Video, VideoClip } from '../../domain/entities/Video';
 import { VideoApi } from '../api/VideoApi';
 
 export class VideoRepositoryImpl implements IVideoRepository {
-  async uploadVideo(fileUri: string, onProgress?: (progress: number) => void): Promise<Video> {
+  async uploadVideo(
+    fileUri: string, 
+    onProgress?: (progress: number) => void,
+    options?: { prompt?: string, clipCount?: number, aspectRatio?: string, subtitleColor?: string }
+  ): Promise<Video> {
     try {
-      return await VideoApi.upload(fileUri, onProgress);
+      return await VideoApi.upload(fileUri, onProgress, options);
     } catch (error) {
       console.error('Error uploading video:', error);
       throw error;

@@ -4,7 +4,18 @@ import { Video } from '../entities/Video';
 export class UploadVideoUseCase {
   constructor(private videoRepository: IVideoRepository) {}
 
-  async execute(fileUri: string, onProgress?: (progress: number) => void): Promise<Video> {
-    return await this.videoRepository.uploadVideo(fileUri, onProgress);
+  async execute(
+    fileUri: string, 
+    onProgress?: (progress: number) => void,
+    options?: { 
+      prompt?: string, 
+      clipCount?: number, 
+      aspectRatio?: string, 
+      subtitleColor?: string,
+      realism?: number,
+      motion?: string
+    }
+  ): Promise<Video> {
+    return await this.videoRepository.uploadVideo(fileUri, onProgress, options);
   }
 }

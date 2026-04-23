@@ -4,19 +4,17 @@ import { ApiConfig } from '../../core/constants/api';
 import { useAuthStore } from '../../presentation/hooks/useAuthStore';
 
 export const VideoApi = {
-  upload: async (fileUri: string, onProgress?: (progress: number) => void): Promise<Video> => {
+  upload: async (
+    fileUri: string, 
+    onProgress?: (progress: number) => void,
+    options?: { prompt?: string, clipCount?: number, aspectRatio?: string, subtitleColor?: string }
+  ): Promise<Video> => {
     if (ApiConfig.USE_MOCK) {
       for (let i = 0; i <= 100; i += 10) {
         if (onProgress) onProgress(i);
         await new Promise(resolve => setTimeout(() => resolve(true), 200));
       }
-      return {
-        id: 'vid_123',
-        url: fileUri,
-        title: 'Uploaded Video',
-        duration: 60,
-        status: 'processing',
-      };
+      return { id: 'vid_123', url: fileUri, title: 'Uploaded Video', duration: 60, status: 'processing' };
     }
 
     const { token, activeProvider, apiToken } = useAuthStore.getState();
@@ -27,10 +25,17 @@ export const VideoApi = {
       type: 'video/mp4',
     } as any);
 
+    if (options) {
+      if (options.prompt) formData.append('prompt', options.prompt);
+      if (options.clipCount) formData.append('clipCount', options.clipCount.toString());
+      if (options.aspectRatio) formData.append('aspectRatio', options.aspectRatio);
+      if (options.subtitleColor) formData.append('subtitleColor', options.subtitleColor);
+    }
+
     const headers: any = {
       'Content-Type': 'multipart/form-data',
       'Authorization': `Bearer ${token}`,
-      'x-ai-provider': activeProvider, // 'gemini' | 'openai' | 'claude'
+      'x-ai-provider': activeProvider,
     };
 
     if (apiToken) {
@@ -68,7 +73,7 @@ export const VideoApi = {
     return response.data;
   },
 
-  getMyVideos: async (): Promise<Video[]> => {
+  getUserVideos: async (): Promise<Video[]> => {
     const token = useAuthStore.getState().token;
     const response = await axios.get(`${ApiConfig.BASE_URL}/videos`, {
       headers: { 'Authorization': `Bearer ${token}` }

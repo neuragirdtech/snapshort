@@ -1,5 +1,5 @@
 export const Colors = {
-  primary: '#FF3B30', // Orange-Red
+  primary: '#FF3B30', // Orange-Red (ASLI)
   secondary: '#FF9500', // Orange
   background: '#0F0F12',
   surface: '#1A1A1D',
@@ -27,6 +27,11 @@ export const Typography = {
   },
   h2: {
     fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: Colors.text,
+  },
+  h3: {
+    fontSize: 20,
     fontWeight: 'bold' as const,
     color: Colors.text,
   },

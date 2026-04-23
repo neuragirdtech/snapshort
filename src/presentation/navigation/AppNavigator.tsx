@@ -2,12 +2,13 @@ import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import RNBootSplash from 'react-native-bootsplash';
 import { View, ActivityIndicator } from 'react-native';
-import ResultScreen from '../screens/result/ResultScreen';
+import EditorScreen from '../screens/editor/EditorScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import GetStartedScreen from '../screens/onboarding/GetStartedScreen';
 import VideoPlayerScreen from '../screens/player/VideoPlayerScreen';
-import MainDrawerNavigator from './MainDrawerNavigator';
+import CreativeConfigScreen from '../screens/creative/CreativeConfigScreen';
+import MainTabNavigator from './MainTabNavigator';
 import { useAuthStore } from '../hooks/useAuthStore';
 
 export type RootStackParamList = {
@@ -15,8 +16,9 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Main: undefined; 
-  Result: { videoId: string };
-  VideoPlayer: { videoUri?: string, title?: string, videoId?: string }; // videoId ditambahkan untuk fetch BE
+  Editor: { videoId: string }; // Changed from Result to Editor
+  VideoPlayer: { videoUri?: string, title?: string, videoId?: string };
+  VideoConfig: { videoUri: string, duration?: number };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,7 +28,7 @@ const AppNavigator = () => {
 
   useEffect(() => {
     if (_hasHydrated) {
-      RNBootSplash.hide({ fade: true, duration: 500 });
+      RNBootSplash.hide({ fade: true });
     }
   }, [_hasHydrated]);
 
@@ -56,11 +58,16 @@ const AppNavigator = () => {
         </>
       ) : (
         <>
-          <Stack.Screen name="Main" component={MainDrawerNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="Result" component={ResultScreen} options={{ title: 'Video Clips' }} />
+          <Stack.Screen name="Main" component={MainTabNavigator} options={{ headerShown: false }} />
+          <Stack.Screen name="Editor" component={EditorScreen} options={{ headerShown: false }} />
           <Stack.Screen 
             name="VideoPlayer" 
             component={VideoPlayerScreen} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="VideoConfig" 
+            component={CreativeConfigScreen} 
             options={{ headerShown: false }} 
           />
         </>
