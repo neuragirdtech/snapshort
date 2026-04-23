@@ -44,7 +44,11 @@ export const RecentProjects: React.FC = () => {
         <TouchableOpacity 
           key={item.id} 
           style={styles.item}
-          onPress={() => navigation.navigate('Editor', { videoId: item.id })}
+          onPress={() => navigation.navigate('FullVideoResult', { 
+            videoId: item.id,
+            videoUrl: item.url, 
+            title: item.title 
+          })}
         >
           <Image 
             source={{ uri: item.clips?.[0]?.url || item.url }} 

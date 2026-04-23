@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
@@ -19,12 +19,12 @@ type ScreenRouteProp = RouteProp<RootStackParamList, 'Editor'>;
 const EditorScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<ScreenRouteProp>();
-  const { videoId } = route.params;
+  const { videoId, initialClipIndex = 0 } = route.params;
 
   const { setCurrentVideo } = useVideoStore();
   
   // State Management
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(initialClipIndex);
   const [activeTextId, setActiveTextId] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('Text');
   
@@ -44,10 +44,11 @@ const EditorScreen: React.FC = () => {
       setLocalClips(clips);
       setVideoInfo(videoData);
       
-      // Set default text if exists
-      if (clips[0]?.subtitles) {
+      // Set default text for the active clip
+      const activeClip = clips[activeIndex] || clips[0];
+      if (activeClip?.subtitles) {
         try {
-          const subs = typeof clips[0].subtitles === 'string' ? JSON.parse(clips[0].subtitles) : clips[0].subtitles;
+          const subs = typeof activeClip.subtitles === 'string' ? JSON.parse(activeClip.subtitles) : activeClip.subtitles;
           if (subs.length > 0) setActiveTextId(subs[0].id);
         } catch(e){}
       }
@@ -75,6 +76,19 @@ const EditorScreen: React.FC = () => {
     console.log('Text Selected:', textId, 'in clip:', clipIndex);
   };
 
+  const currentClip = localClips[activeIndex];
+
+  // Parse subtitles untuk dikirim ke preview
+  // PINDAHKAN KE SINI (DI ATAS IF LOADING/ERROR)
+  const currentSubtitles = useMemo(() => {
+    if (!currentClip?.subtitles) return [];
+    try {
+      return typeof currentClip.subtitles === 'string' 
+        ? JSON.parse(currentClip.subtitles) 
+        : currentClip.subtitles;
+    } catch(e) { return []; }
+  }, [currentClip]);
+
   if (isLoading && !videoInfo) {
     return (
       <View style={styles.loadingContainer}>
@@ -92,21 +106,6 @@ const EditorScreen: React.FC = () => {
     );
   }
 
-  const currentClip = localClips[activeIndex];
-  
-  // Cari teks yang sedang aktif berdasarkan ID
-  let currentSubtitle = null;
-  if (currentClip?.subtitles) {
-    try {
-      const subs = typeof currentClip.subtitles === 'string' ? JSON.parse(currentClip.subtitles) : currentClip.subtitles;
-      if (activeTextId) {
-        currentSubtitle = subs.find((s: any) => s.id === activeTextId)?.text;
-      } else {
-        currentSubtitle = subs[0]?.text;
-      }
-    } catch(e){}
-  }
-
   return (
     <View style={styles.container}>
       <EditorHeader 
@@ -119,7 +118,8 @@ const EditorScreen: React.FC = () => {
         <VideoPreview 
           videoUrl={currentClip?.url || videoInfo?.url}
           thumbnail={currentClip?.url || videoInfo?.url}
-          subtitle={currentSubtitle}
+          subtitles={currentSubtitles}
+          activeTextId={activeTextId}
         />
       </View>
 

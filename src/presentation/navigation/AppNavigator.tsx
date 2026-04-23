@@ -11,14 +11,19 @@ import CreativeConfigScreen from '../screens/creative/CreativeConfigScreen';
 import MainTabNavigator from './MainTabNavigator';
 import { useAuthStore } from '../hooks/useAuthStore';
 
+import { ClipsResultScreen } from '../screens/clips/ClipsResultScreen';
+import FullVideoResultScreen from '../screens/result/FullVideoResultScreen';
+
 export type RootStackParamList = {
   GetStarted: undefined;
   Login: undefined;
   Register: undefined;
   Main: undefined; 
-  Editor: { videoId: string }; // Changed from Result to Editor
+  Editor: { videoId: string, initialClipIndex?: number }; 
   VideoPlayer: { videoUri?: string, title?: string, videoId?: string };
   VideoConfig: { videoUri: string, duration?: number };
+  ClipsResult: { videoId: string };
+  FullVideoResult: { videoUrl: string; title: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -68,6 +73,16 @@ const AppNavigator = () => {
           <Stack.Screen 
             name="VideoConfig" 
             component={CreativeConfigScreen} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="ClipsResult" 
+            component={ClipsResultScreen} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="FullVideoResult" 
+            component={FullVideoResultScreen} 
             options={{ headerShown: false }} 
           />
         </>

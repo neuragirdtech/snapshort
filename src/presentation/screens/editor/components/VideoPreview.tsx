@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { useVideoPlayer, VideoView } from 'react-native-video';
 import { Settings, SkipBack, Play, Pause, SkipForward, Maximize2 } from 'lucide-react-native';
@@ -9,14 +9,36 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 interface VideoPreviewProps {
   videoUrl: string;
   thumbnail?: string;
-  subtitle?: string;
+  subtitles?: any[]; // Terima array subtitle lengkap
+  activeTextId?: string; // Teks yang sedang diklik user
 }
 
-export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, subtitle }) => {
+export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, subtitles = [], activeTextId }) => {
+  const [currentTime, setCurrentTime] = useState(0);
+
   const player = useVideoPlayer(videoUrl, (p) => {
     p.loop = true;
     p.play();
   });
+
+  // Pantau waktu video secara real-time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (player && player.currentTime !== undefined) {
+        setCurrentTime(player.currentTime);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [player]);
+
+  // Tentukan teks mana yang muncul berdasarkan waktu player
+  const displayedText = useMemo(() => {
+    // Jika user sedang klik teks tertentu, mungkin kita ingin paksa tampilkan itu (opsional)
+    // Tapi untuk hasil yang natural, kita ikuti waktu video:
+    return subtitles.find((s: any) => 
+      currentTime >= s.time && currentTime <= (s.time + s.duration)
+    )?.text;
+  }, [subtitles, currentTime]);
 
   return (
     <View style={styles.outerContainer}>
@@ -24,13 +46,13 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, subtitle }
         <VideoView
           player={player}
           style={styles.previewImage}
-          resizeMode="contain" 
+          contentFit="contain" 
         />
         
-        {subtitle && (
+        {displayedText && (
           <View style={styles.subtitleOverlay}>
             <View style={styles.subtitleCapsule}>
-              <Text style={styles.subtitleText}>{subtitle}</Text>
+              <Text style={styles.subtitleText}>{displayedText}</Text>
             </View>
           </View>
         )}

@@ -6,7 +6,6 @@ import { Smartphone, Square, Monitor } from 'lucide-react-native';
 interface VisualControlsProps {
   realism: number; setRealism: (v: number) => void;
   motion: string; setMotion: (v: string) => void;
-  clipCount: number; setClipCount: (v: number) => void;
   aspectRatio: string; setAspectRatio: (v: string) => void;
 }
 
@@ -14,7 +13,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const SLIDER_WIDTH = SCREEN_WIDTH - 40;
 
 export const VisualControls: React.FC<VisualControlsProps> = (props) => {
-  const { realism, motion, clipCount, aspectRatio, setAspectRatio, setClipCount, setRealism } = props;
+  const { realism, motion, aspectRatio, setAspectRatio, setRealism } = props;
 
   // Realism PanResponder
   const realismPan = useRef(
@@ -23,17 +22,6 @@ export const VisualControls: React.FC<VisualControlsProps> = (props) => {
       onPanResponderMove: (_, gestureState) => {
         const newValue = Math.min(Math.max(0, (gestureState.moveX - 20) / SLIDER_WIDTH * 100), 100);
         setRealism(Math.round(newValue));
-      },
-    })
-  ).current;
-
-  // Clip Count PanResponder
-  const clipPan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        const newValue = Math.min(Math.max(1, (gestureState.moveX - 20) / SLIDER_WIDTH * 10), 10);
-        setClipCount(Math.round(newValue));
       },
     })
   ).current;
@@ -65,15 +53,6 @@ export const VisualControls: React.FC<VisualControlsProps> = (props) => {
         <View style={styles.sliderTrack}>
           <View style={[styles.sliderFill, { width: `${realism}%`, backgroundColor: Colors.primary }]} />
           <View style={[styles.sliderThumb, { left: `${realism}%`, backgroundColor: Colors.primary }]} />
-        </View>
-      </View>
-
-      {/* Clip Count Slider */}
-      <Text style={styles.controlLabel}>Clips to Generate: {clipCount}</Text>
-      <View style={styles.sliderRow} {...clipPan.panHandlers}>
-        <View style={styles.sliderTrack}>
-          <View style={[styles.sliderFill, { width: `${(clipCount / 10) * 100}%`, backgroundColor: Colors.primary }]} />
-          <View style={[styles.sliderThumb, { left: `${(clipCount / 10) * 100}%`, backgroundColor: Colors.primary }]} />
         </View>
       </View>
     </View>

@@ -10,6 +10,7 @@ import { Colors, Typography } from '../../../core/constants/theme';
 import { useVideoStore } from '../../hooks/useVideoStore';
 import { VideoRepositoryImpl } from '../../../data/repositories/VideoRepositoryImpl';
 import { UploadVideoUseCase } from '../../../domain/usecases/UploadVideoUseCase';
+import { VideoApi } from '../../../data/api/VideoApi';
 
 // Modular Components
 import { PromptCard } from './components/PromptCard';
@@ -28,7 +29,6 @@ const CreativeConfigScreen: React.FC = () => {
   const [prompt, setPrompt] = useState('Create a 15-second cinematic story about...');
   const [realism, setRealism] = useState(80);
   const [motion, setMotion] = useState('drone');
-  const [clipCount, setClipCount] = useState(3);
   const [aspectRatio, setAspectRatio] = useState('9:16');
 
   const handleGenerate = async () => {
@@ -47,19 +47,48 @@ const CreativeConfigScreen: React.FC = () => {
           prompt, 
           realism, 
           motion, 
-          clipCount, 
           aspectRatio, 
           subtitleColor: 'auto' 
         }
       );
 
       setCurrentVideo(video);
-      navigation.navigate('Editor', { videoId: video.id });
+      
+      // PERBAIKAN: Gunakan video.videoId (sesuai respon backend)
+      const targetId = video.videoId || video.id;
+      console.log('Starting polling for video:', targetId);
+
+      // POLLING STATUS: Tunggu sampai video berstatus 'completed'
+      let isCompleted = false;
+      let attempts = 0;
+      const maxAttempts = 60; 
+
+      while (!isCompleted && attempts < maxAttempts) {
+        try {
+          attempts++;
+          const statusData = await VideoApi.getStatus(targetId);
+          if (statusData.status === 'completed') {
+            isCompleted = true;
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+        } catch (pollError) {
+          console.warn('Polling attempt failed, retrying...', pollError);
+          await new Promise(resolve => setTimeout(resolve, 3000)); 
+        }
+      }
+
+      // Setelah selesai, langsung arahkan ke FullVideoResult
+      navigation.navigate('FullVideoResult', { 
+        videoId: targetId,
+        videoUrl: video.url, 
+        title: video.title || 'My AI Video' 
+      });
       
     } catch (err) {
-      console.error('Generation Error:', err);
+      console.error('Generation Error Detail:', err);
       setError('Failed to craft content.');
-      Alert.alert('Error', 'Generation failed. Please check your connection or credits.');
+      Alert.alert('Error', `Generation failed: ${err.message || 'Check your connection'}`);
     } finally {
       setProcessing(false);
       setUploadProgress(0);
@@ -70,7 +99,11 @@ const CreativeConfigScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Crafting Your AI Story... {uploadProgress}%</Text>
+        <Text style={styles.loadingText}>
+          {uploadProgress < 100 
+            ? `Uploading Story... ${uploadProgress}%` 
+            : 'Analyzing & Splitting Clips...'}
+        </Text>
       </View>
     );
   }
@@ -95,7 +128,6 @@ const CreativeConfigScreen: React.FC = () => {
         <VisualControls 
           realism={realism} setRealism={setRealism} 
           motion={motion} setMotion={setMotion} 
-          clipCount={clipCount} setClipCount={setClipCount}
           aspectRatio={aspectRatio} setAspectRatio={setAspectRatio}
         />
       </ScrollView>
